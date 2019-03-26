@@ -1,0 +1,2 @@
+# Queries
+My Query Repo
