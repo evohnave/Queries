@@ -13,5 +13,10 @@ SELECT owner, SUM(bytes)/1024/1024 Size_MB
 FROM dba_segments
 GROUP BY owner;
 
+/* Table Size... plus filter to not show 'empty' tables */
+SELECT segment_name, segment_type, bytes/1024/1024 MB
+FROM dba_segments
+WHERE segment_type='TABLE' AND bytes > 65536
+
 /* PostgreSQL Functions */
 SELECT pg_size_pretty(pg_database_size('<dbname here>'));
