@@ -6,7 +6,7 @@
     will not work and you will get errors for queries over 4000 characters
 */
 
-WITH  CTE AS (
+  WITH  CTE AS (
 SELECT  NVL(SES.USERNAME, 'ORACLE PROC') || ' (' || SES.SID || ')' USERNAME
         , SID
         , MACHINE
