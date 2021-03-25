@@ -1,0 +1,12 @@
+/* Gets the version of the Oracle you are running */
+
+SELECT   banner
+  FROM   v$version
+ WHERE   banner LIKE 'Oracle%'
+;
+
+/* More generically, get all the info from v$version */
+
+SELECT   *
+  FROM   v$version
+;
