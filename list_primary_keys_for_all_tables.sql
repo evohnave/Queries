@@ -1,7 +1,7 @@
 SELECT   tc.constraint_type CONSTRAINT
        , tc.table_schema SCHEMA
        , tc.table_name TABLE
-       , string_agg(kc.column_name, ', ') CONSTRAINT
+       , string_agg(kc.column_name, ', ') "PRIMARY KEY"
   FROM   information_schema.table_constraints tc
   JOIN   information_schema.key_column_usage kc
     ON   kc.table_name = tc.table_name
