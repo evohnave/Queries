@@ -19,6 +19,6 @@ CREATE  OR REPLACE FUNCTION ADD_BUSINESS_DAYS(start_date DATE, num_days BIGINT)
                                    '1 day'::INTERVAL) d
             WHERE EXTRACT('dow' FROM d) NOT IN (0, 6)
             LIMIT 1
-            OFFSET 5
+            OFFSET num_days
         $ABD$ LANGUAGE SQL
 ;
