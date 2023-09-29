@@ -22,7 +22,7 @@ SELECT   '2023-09-01'::date "FROM"
 CREATE  OR REPLACE FUNCTION COUNT_BUSINESS_DAYS(start_date DATE, end_date DATE)
         RETURNS BIGINT
         AS $CBD$
-           SELECT   COUNT(d::DATE) - 1 AS d
+           SELECT   COUNT(d::DATE) - 1 AS day_count
              FROM   GENERATE_SERIES(start_date, end_date, '1 day'::INTERVAL) d
             WHERE   EXTRACT('dow' FROM d) NOT IN (0, 6)
         $CBD$ LANGUAGE SQL
