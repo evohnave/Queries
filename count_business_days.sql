@@ -7,14 +7,15 @@ Usage
 
 WITH   days AS (
        SELECT   d::date
-         FROM   generate_series(to_date('2023-09-01', 'yyyy-mm-dd'),
+         FROM   GENERATE_SERIES(to_date('2023-09-01', 'yyyy-mm-dd'),
                                 to_date('2023-09-30', 'yyyy-mm-dd'),
                                 '1 day'::interval) d
        )
 SELECT   '2023-09-01'::date "FROM"
        , days.d "TO"
-       , count_business_days('2023-09-01'::date, days.d) "Num B Days"
-  FROM  days ORDER BY 2 ASC
+       , COUNT_BUSINESS_DAYS('2023-09-01'::date, days.d) "Num B Days"
+  FROM  days 
+ ORDER  BY 2 ASC
 ;
 
 */
