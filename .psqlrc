@@ -1,0 +1,72 @@
+-- https://postgresql.org/docs/<version>/app-psql.html
+--  Remember: all commands must be on one line
+-- Don't display the "helpful" message on startup
+\set QUIET 1
+-- Format nulls
+\pset null '<NULL>'
+-- Show how long each query takes to execute
+\timing on
+\x auto
+\set VERBOSITY verbose
+-- I didn't like this, but kept it in here so you can see it
+--\set HISTFILE ~/.psql_history-:HOST-:DBNAME-:USER
+-- ignore spaces and previous lines; use ignoredups for just dupes
+\set HISTCONTROL ignoreboth
+\set COMP_KEYWORD_CASE upper
+\echo '\n\n\n'
+\echo 'Administrative queries:\n'
+\echo '\t\t:settings\t\t-- Server Settings'
+\echo '\t\t:conninfo\t\t-- Server connections'
+\echo '\t\t:activity\t\t-- Server activity'
+\echo '\t\t:locks\t\t\t-- Lock info'
+\echo '\t\t:waits\t\t\t-- Waiting queries'
+\echo '\t\t:dbsize\t\t\t-- Database Size'
+\echo '\t\t:tablesize\t\t-- Tables Size'
+\echo '\t\t:uselesscol\t\t-- Useless columns'
+\echo '\t\t:uptime\t\t\t-- Server uptime'
+\echo '\t\t:menu\t\t\t-- Help Menu'
+\echo '\t\t\\h\t\t\t-- Help with SQL commands'
+\echo '\t\t\\?\t\t\t-- Help with psql commands'
+\echo '\nMy Administrative Queries:\n'
+\echo '\t\t:describe_table\t\t-- Describe A Table (asks for table name)'
+\echo '\t\t:show_slow_queries\t-- Display Slow Queries'
+\echo '\t\t:cache_hit_rate\t\t-- Display Cache Hit Ratio'
+\echo '\t\t:index_usage_rate\t-- Display Index Usage Rate'
+\echo '\t\t:index_cache_rate\t-- Display Index Cache Rate'
+\echo '\t\t:show_psql_help_url\t-- Display the url for help on psql'
+
+\echo '\nDevelopment queries:\n'
+\echo '\t\t:sp\t\t\t-- Current Search Path'
+\echo '\t\t:clear\t\t\t-- Clear screen'
+\echo '\t\t:ll\t\t\t-- List\n'
+
+-- Administration queries
+\set menu '\\i ~/.psqlrc'
+\set settings 'select name, setting,unit,context from pg_settings;'
+\set locks  'SELECT bl.pid AS blocked_pid, a.usename AS blocked_user, kl.pid AS blocking_pid, ka.usename AS blocking_user, a.query AS blocked_statement FROM pg_catalog.pg_locks bl JOIN pg_catalog.pg_stat_activity a ON bl.pid = a.pid JOIN pg_catalog.pg_locks kl JOIN pg_catalog.pg_stat_activity ka ON kl.pid = ka.pid ON bl.transactionid = kl.transactionid AND bl.pid != kl.pid WHERE NOT bl.granted;'
+\set conninfo 'select usename, count(*) from pg_stat_activity group by usename;'
+\set activity 'select datname, pid, usename, application_name,client_addr, client_hostname, client_port, query, state from pg_stat_activity;'
+\set waits 'SELECT pg_stat_activity.pid, pg_stat_activity.query, pg_stat_activity.waiting, now() - pg_stat_activity.query_start AS \"totaltime\", pg_stat_activity.backend_start FROM pg_stat_activity WHERE pg_stat_activity.query !~ \'%IDLE%\'::text AND pg_stat_activity.waiting = true;'
+\set dbsize 'SELECT datname, pg_size_pretty(pg_database_size(datname)) db_size FROM pg_database ORDER BY db_size;'
+\set tablesize 'SELECT nspname || \'.\' || relname AS \"relation\", pg_size_pretty(pg_relation_size(C.oid)) AS "size" FROM pg_class C LEFT JOIN pg_namespace N ON (N.oid = C.relnamespace) WHERE nspname NOT IN (\'pg_catalog\', \'information_schema\') ORDER BY pg_relation_size(C.oid) DESC LIMIT 40;'
+\set uselesscol 'SELECT nspname, relname, attname, typname, (stanullfrac*100)::int AS null_percent, case when stadistinct >= 0 then stadistinct else abs(stadistinct)*reltuples end AS \"distinct\", case 1 when stakind1 then stavalues1 when stakind2 then stavalues2 end AS \"values\" FROM pg_class c JOIN pg_namespace ns ON (ns.oid=relnamespace) JOIN pg_attribute ON (c.oid=attrelid) JOIN pg_type t ON (t.oid=atttypid) JOIN pg_statistic ON (c.oid=starelid AND staattnum=attnum) WHERE nspname NOT LIKE E\'pg\\\\_%\' AND nspname != \'information_schema\' AND relkind=\'r\' AND NOT attisdropped AND attstattarget != 0 AND reltuples >= 100 AND stadistinct BETWEEN 0 AND 1 ORDER BY nspname, relname, attname;'
+\set uptime 'select now() - pg_postmaster_start_time() AS uptime;'
+
+-- Development queries:
+\set sp 'SHOW search_path;'
+\set clear '\\! clear;'
+\set ll '\\! ls -lrt;'
+
+-- My queries, added to Administration queries
+-- Requires Extension pg_stat_statements
+\set show_slow_queries 'SELECT (total_exec_time / 1000.0 / 60.0)::DECIMAL(10,5) AS total_minutes, (total_exec_time / 1000.0 / calls)::DECIMAL(10,5) AS average_time_sec, calls, LEFT(query, 50) AS query FROM pg_stat_statements WHERE calls > 1 ORDER BY 2 DESC LIMIT 30;'
+\set describe_table '\\echo Enter Table Name:\\\\ \\prompt tbl_name \\\\SELECT table_name, column_name, data_type FROM information_schema.columns WHERE table_name=:''tbl_name'';'
+\set show_psql_help_url '\echo "https://postgresql.org/docs/<version>/app-psql.html"'
+\set cache_hit_rate '\\echo\\\\ \\echo ''            Cache Hit Rate'' \\\\SELECT sum(heap_blks_read) as heap_read, sum(heap_blks_hit) as heap_hit, (sum(heap_blks_hit) / (sum(heap_blks_hit) + sum(heap_blks_read)))::DECIMAL(10,5) as cache_hit_ratio FROM pg_statio_user_tables;'
+\set index_usage_rate '\\echo\\\\ \\echo ''            Index Usage Rate'' \\\\SELECT relname, 100 * idx_scan / (seq_scan + idx_scan) percent_of_times_index_used, n_live_tup rows_in_table FROM pg_stat_user_tables WHERE seq_scan + idx_scan > 0 ORDER BY n_live_tup DESC;'
+\set index_cache_rate '\\echo\\\\ \\echo ''       Index Cache Rate'' \\\\SELECT sum(idx_blks_read) as idx_read, sum(idx_blks_hit) as idx_hit, ((sum(idx_blks_hit) - sum(idx_blks_read)) / sum(idx_blks_hit))::DECIMAL(10,5) as ratio FROM pg_statio_user_indexes;'
+
+-- set prompt to '(user@host:port) [db]>'
+\set PROMPT1 '%n@%m:%>) [%/]>'
+\set PROMPT2 "" -- empty
+\set PROMPT3 '<enter data>'
