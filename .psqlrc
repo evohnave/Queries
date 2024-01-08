@@ -33,6 +33,8 @@
 \echo '\t\t:cache_hit_rate\t\t-- Display Cache Hit Ratio'
 \echo '\t\t:index_usage_rate\t-- Display Index Usage Rate'
 \echo '\t\t:index_cache_rate\t-- Display Index Cache Rate'
+\echo '\t\t:vacuum_analyze\t\t-- Display Vacuum and Analyze statistics'
+\echo '\t\t:vacuum_analyze_short\t-- Display Vacuum and Analyze statistics on used tables'
 \echo '\t\t:show_psql_help_url\t-- Display the url for help on psql'
 
 \echo '\nDevelopment queries:\n'
@@ -51,6 +53,8 @@
 \set tablesize 'SELECT nspname || \'.\' || relname AS \"relation\", pg_size_pretty(pg_relation_size(C.oid)) AS "size" FROM pg_class C LEFT JOIN pg_namespace N ON (N.oid = C.relnamespace) WHERE nspname NOT IN (\'pg_catalog\', \'information_schema\') ORDER BY pg_relation_size(C.oid) DESC LIMIT 40;'
 \set uselesscol 'SELECT nspname, relname, attname, typname, (stanullfrac*100)::int AS null_percent, case when stadistinct >= 0 then stadistinct else abs(stadistinct)*reltuples end AS \"distinct\", case 1 when stakind1 then stavalues1 when stakind2 then stavalues2 end AS \"values\" FROM pg_class c JOIN pg_namespace ns ON (ns.oid=relnamespace) JOIN pg_attribute ON (c.oid=attrelid) JOIN pg_type t ON (t.oid=atttypid) JOIN pg_statistic ON (c.oid=starelid AND staattnum=attnum) WHERE nspname NOT LIKE E\'pg\\\\_%\' AND nspname != \'information_schema\' AND relkind=\'r\' AND NOT attisdropped AND attstattarget != 0 AND reltuples >= 100 AND stadistinct BETWEEN 0 AND 1 ORDER BY nspname, relname, attname;'
 \set uptime 'select now() - pg_postmaster_start_time() AS uptime;'
+\set vacuum_analyze 'SELECT relname AS "Table", n_live_tup AS "Live Rows", n_dead_tup AS "Dead Rows", last_vacuum AS "Last Vacuum", last_analyze AS "Last Analyze" FROM pg_stat_user_tables;'
+\set vacuum_analyze_short 'SELECT relname AS "Table", n_live_tup AS "Live Rows", n_dead_tup AS "Dead Rows", last_vacuum AS "Last Vacuum", last_analyze AS "Last Analyze" FROM pg_stat_user_tables WHERE n_live_tup > 0 order by 1 ASC;'
 
 -- Development queries:
 \set sp 'SHOW search_path;'
