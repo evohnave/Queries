@@ -1,0 +1,35 @@
+/*
+  Returns the session identifier SID, machine name MACHINE, run time hh:mm:ss RUNT,
+    blocking session status BLOCK, and the first 4000 characters of the query for
+    active queries.
+    Note: if version < 12.2 the ON OVERFLOW TRUNCATE portion of the LISTAGG function
+    will not work and you will get errors for queries over 4000 characters
+*/
+
+  WITH  CTE AS (
+SELECT  NVL(SES.USERNAME, 'ORACLE PROC') || ' (' || SES.SID || ')' USERNAME
+        , SID
+        , MACHINE
+        , REPLACE(SQL.SQL_TEXT, CHR(10), '') STMT
+        , TO_CHAR(DATE '1970-01-01' + (SES.LAST_CALL_ET/24/60/60), 'HH24:MI:SS') RUNT
+        , SES.BLOCKING_SESSION_STATUS BLOCK
+        , SQL.PIECE PIECE
+  FROM  V$SESSION SES
+        , V$SQLTEXT_WITH_NEWLINES SQL
+ WHERE  SES.STATUS = 'ACTIVE'
+        AND SES.USERNAME IS NOT NULL
+        AND SES.SQL_ADDRESS = SQL.ADDRESS
+        AND SES.SQL_HASH_VALUE = SQL.HASH_VALUE
+        AND SES.AUDSID <> USERENV('SESSIONID')
+ ORDER  BY SID, RUNT DESC, SQL.PIECE
+        )
+SELECT  USERNAME
+        , MACHINE
+        , SID
+        , RUNT
+        , BLOCK
+        -- , LISTAGG(STMT, '') WITHIN GROUP(ORDER BY PIECE) FULLSTMT -- for Oracle < v12.2
+        , LISTAGG(STMT, '' ON OVERFLOW TRUNCATE '... ' WITH COUNT) WITHIN GROUP(ORDER BY PIECE) FULLSTMT
+  FROM  CTE
+ GROUP  BY SID, USERNAME, RUNT, BLOCK, MACHINE
+;

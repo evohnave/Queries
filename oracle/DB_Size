@@ -1,0 +1,20 @@
+/* Oracle Functions */
+
+/* Total Size Allocated */
+SELECT SUM(bytes)/1024/1024 size_in_mb
+  FROM dba_data_files;
+
+/* Total Space Used */
+SELECT SUM(bytes)/1024/1024 size_in_mb 
+  FROM dba_segments;
+
+/* Total Space Used By Owner */
+SELECT owner, SUM(bytes)/1024/1024 Size_MB 
+  FROM dba_segments
+ GROUP BY owner;
+
+/* Table Size... plus filter to not show 'empty' tables */
+SELECT segment_name, segment_type, bytes/1024/1024 MB
+  FROM dba_segments
+ WHERE segment_type='TABLE' AND bytes > 65536
+;
