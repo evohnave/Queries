@@ -1,4 +1,6 @@
 # Queries
 My Query Repo
 
-There are some Oracle SQL queries here, but I hope to never have to use Oracle SQL again...
+Some of these queries are my own, some are made from ideas of others, and some are wholeheartedly "appropriated".  Thanks to their authors.  
+
+Not too much work done in Oracle or Redshift.  I mainly work in PostgreSQL today.  
