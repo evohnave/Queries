@@ -3,7 +3,7 @@ The key is the WHEN GROUPING(field) = 1
 */
 
 SELECT   CASE
-           WHEN GROUPING(rc.descr) = 1 THEN "Total"
+           WHEN GROUPING(rc.descr) = 1 THEN 'Total'
            ELSE rc.descr
          END "Descr"
          , COUNT(*) "Count"
