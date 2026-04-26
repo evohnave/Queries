@@ -6,5 +6,5 @@ SELECT   relname AS "Table Name"
        , (pgstattuple(relid)).dead_tuple_percent AS "Pct Dead"
        , (pgstattuple(relid)).free_percent AS "Pct Free"
   FROM   pg_catalog.pg_stat_user_tables
- ORDER   BY dead_pct DESC
+ ORDER   BY "Pct Dead" DESC
 ;
